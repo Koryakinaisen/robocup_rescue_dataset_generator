@@ -10,7 +10,7 @@ import math
 
 from config import (
     WINDOW_SIZE, MAX_OBJECTS,
-    AGENT_TYPES, PRIORITIES
+    AGENT_TYPES, PRIORITIES, RESULT_DATASET_JSON
 )
 
 CLUSTER_DISTANCE_AGENTS = 2.0
@@ -86,6 +86,8 @@ def priority_idx(obj, order):
 
 
 def calculate_centroid(obj):
+    if obj.get('type', '') in AGENT_TYPES:
+        return obj.get('coordinates').get('locationX'), obj.get('coordinates').get('locationY')
     # Извлекаем список координатных сегментов из объекта
     coordinates = obj.get('coordinates', [])
 
@@ -106,10 +108,11 @@ def calculate_centroid(obj):
     return round(centroid_x, 3), round(centroid_y, 3)
 
 
-def get_from_traffic(agent_id, curr_time, predict_time, traffic, locations):
+def get_from_traffic(agent_id, curr_index, predict_time, traffic, locations):
     buried = False
     injured = False
     dead = False
+    curr_time = predict_time - WINDOW_SIZE + curr_index
     agent_action = 'move' if did_agent_moved(agent_id, curr_time, predict_time, locations) else 'rest'
     for agent in traffic[curr_time - 1]['agents']:
         if agent['id'] == agent_id:
@@ -163,9 +166,9 @@ def filter_snapshot(snapshot, target_id, target_type):
                 dist(o, target) if target else 0)
 
     clustered.sort(key=s_key)
-    limit = MAX_OBJECTS - 1 if not target else MAX_OBJECTS
+    target_second_check = next((o for o in clustered if o["id"] == target_id), None)
+    limit = MAX_OBJECTS - 1 if not target or not target_second_check else MAX_OBJECTS
     clustered = clustered[:limit]
-
 
     snapshot["data"] = clustered
     return snapshot
@@ -177,11 +180,11 @@ def process_log(timeline, target_id, target_type):
 
 def get_obj_in_vision(predict_time, vision, traffic, locations):
     dataset = []
-    for current_time in range(predict_time - WINDOW_SIZE + 1, predict_time + 1):
+    for current_index in range(WINDOW_SIZE):
         data = []
-        for obj in vision[current_time - 1]['vision']:
+        for obj in vision[current_index]['vision']:
             locationX, locationY = calculate_centroid(obj)
-            is_buried, is_injured, is_dead, action = get_from_traffic(obj['id'], current_time, predict_time, traffic, locations)
+            is_buried, is_injured, is_dead, action = get_from_traffic(obj['id'], current_index, predict_time, traffic, locations)
             OBJ = {
                 'id': obj['id'],
                 'type': obj['type'],
@@ -197,7 +200,7 @@ def get_obj_in_vision(predict_time, vision, traffic, locations):
 
             data.append(OBJ)
         dataset.append({
-            'time': current_time,
+            'time': predict_time - WINDOW_SIZE + current_index,
             'data': data
         })
     return dataset
@@ -210,4 +213,7 @@ def build_dataset_json(target_id, predict_time, id_to_type, vision, traffic, loc
     # with open(RESULT_DATASET_JSON, 'w', encoding='utf-8') as out:
     #     json.dump(new_json, out, indent=2, ensure_ascii=False)
     # print(f"[dataset_builder] Датасет сохранён в {RESULT_DATASET_JSON}")
+    for elem in new_json:
+        if len(elem['data']) > MAX_OBJECTS:
+            raise ValueError(f"There are more than {MAX_OBJECTS} objects after filtering.")
     return new_json

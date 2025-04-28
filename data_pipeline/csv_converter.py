@@ -24,8 +24,14 @@ FEATURES = [
 
 EMPTY_OBJ = [0, -1, -1, 0, 0, 0, 0, 0, 0]
 
-def list_to_csv( numbers, path):
+def list_to_csv( numbers, target_action, path):
     numbers = list(numbers)
+    if len(numbers) != 2700:
+        raise ValueError("Numbers must have 2700 elements")
+    action_id = ACTION2ID.get(target_action, 0)
+    if action_id == 0:
+        raise ValueError("Invalid action")
+    numbers.append(action_id)
     p = Path(path)
     p.parent.mkdir(exist_ok=True)
     exists = p.exists() and os.path.getsize(p)>0
@@ -61,10 +67,10 @@ def get_obj_vect(obj, location_x_normalizer, location_y_normalizer, target_id):
     is_target = 1 if obj['id'] == target_id else 0
     v = [
         TYPE2ID.get(obj['type'], 0),
-        obj.get("locationX", -1) if not is_visible else obj.get("locationX", 0) / location_x_normalizer,
-        obj.get("locationY", -1) if not is_visible else obj.get("locationY", 0) / location_y_normalizer,
-        is_visible,
-        is_target,
+        round(obj.get("locationX", -1) if not is_visible else obj.get("locationX", 0) / location_x_normalizer, 3),
+        round(obj.get("locationY", -1) if not is_visible else obj.get("locationY", 0) / location_y_normalizer, 3),
+        int(is_visible),
+        int(is_target),
         int(obj.get("isBuried", 0)),
         int(obj.get("isInjured", 0)),
         int(obj.get("isDead", 0)),
@@ -72,6 +78,7 @@ def get_obj_vect(obj, location_x_normalizer, location_y_normalizer, target_id):
     ]
     if v[0] == 0 and is_visible:
         print(obj['type'])
+        raise TypeError("Type is unknown")
     return v
 
 
@@ -109,10 +116,11 @@ def get_data_in_string(data_list, target_id, target_type):
     res = []
     for snap in data_list:
         arr = get_vect_for_one_time(snap['data'], data_list, target_id, target_type)
-        print(len(arr))
+        if len(arr) > 270:
+            raise ValueError("len arr greater than 270")
         res.extend(arr)
     return res
 
 
-def convert_dataset_to_csv(timestamp, target_id, target_type):
-    list_to_csv(get_data_in_string(timestamp, target_id, target_type), DATASET_CSV)
+def convert_dataset_to_csv(timestamp, target_id, target_type, target_action):
+    list_to_csv(get_data_in_string(timestamp, target_id, target_type), target_action, DATASET_CSV)

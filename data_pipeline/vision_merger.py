@@ -2,32 +2,37 @@
 import re
 import json
 
-from config import FILTERED_KERNEL_LOG, LOCATIONS_JSON, STATIC_OBJECTS_JSON, VISION_JSON
+from config import FILTERED_KERNEL_LOG, LOCATIONS_JSON, STATIC_OBJECTS_JSON, VISION_JSON, AGENT_TYPES
+
 
 def _get_coordinates(roads_locations, buildings_locations, locations_data, target_type, target_id, time_idx):
     """
     Ищем координаты в статичных объектах (Building/Road) или в locations.json.
     """
+    coordinates = None
+    if target_type in AGENT_TYPES:
+        for item in locations_data[time_idx].get("data"):
+            if item.get("id") == target_id:
+                coordinates = {
+                    "locationX": float(item.get("locationX")) / 1000,
+                    "locationY": float(item.get("locationY")) / 1000
+                }
+                break
+        return coordinates
     if target_type == 'Road':
-        coordinates = None
         for item in roads_locations:
             if item.get("id") == target_id:
                 coordinates = item.get("coordinates")
                 break
         return coordinates
-    if target_type == 'Building':
-        coordinates = None
-        for item in buildings_locations:
-            if item.get("id") == target_id:
-                coordinates = item.get("coordinates")
-                break
-        return coordinates
-    coordinates = None
-    for item in locations_data[time_idx].get("data"):
+    for item in buildings_locations:
         if item.get("id") == target_id:
-            coordinates = (item.get("locationX"), item.get("locationY"))
+            coordinates = item.get("coordinates")
             break
+
     return coordinates
+
+
 
 def merge_vision_data(target_id, current_time, locations_data, static_objects):
     """
@@ -51,7 +56,7 @@ def merge_vision_data(target_id, current_time, locations_data, static_objects):
     needed_timestep = current_time - 9
     timestep = 0
     # Открываем лог-файл
-    with open("logs/filtered.log", "r", encoding="utf-8") as file:
+    with open(FILTERED_KERNEL_LOG, "r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
             time_match = timestep_pattern.match(line)
@@ -99,8 +104,8 @@ def merge_vision_data(target_id, current_time, locations_data, static_objects):
                 })
 
 
-    with open(VISION_JSON, "w", encoding="utf-8") as outfile:
-        json.dump(results, outfile, indent=4, ensure_ascii=False)
+    # with open(VISION_JSON, "w", encoding="utf-8") as outfile:
+    #     json.dump(results, outfile, indent=4, ensure_ascii=False)
 
-    print(f"[vision_merger] Результат сохранён в {VISION_JSON}")
+    # print(f"[vision_merger] Результат сохранён в {VISION_JSON}")
     return results
