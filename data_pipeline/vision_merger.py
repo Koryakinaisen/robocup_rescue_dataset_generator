@@ -1,8 +1,7 @@
 # data_pipeline/vision_merger.py
 import re
-import json
 
-from config import FILTERED_KERNEL_LOG, LOCATIONS_JSON, STATIC_OBJECTS_JSON, VISION_JSON, AGENT_TYPES
+from config import FILTERED_KERNEL_LOG, AGENT_TYPES
 
 
 def _get_coordinates(roads_locations, buildings_locations, locations_data, target_type, target_id, time_idx):
@@ -92,11 +91,12 @@ def merge_vision_data(target_id, current_time, locations_data, static_objects):
                             obj_type,
                             obj_id,
                             timestep)
-                        vision.append({
-                            "type": obj_type.strip(),
-                            "id": obj_id.strip(),
-                            "coordinates": obj_coordinates
-                        })
+                        if obj_coordinates is not None:
+                            vision.append({
+                                "type": obj_type.strip(),
+                                "id": obj_id.strip(),
+                                "coordinates": obj_coordinates
+                            })
 
                 results.append({
                     "timestep": timestep,

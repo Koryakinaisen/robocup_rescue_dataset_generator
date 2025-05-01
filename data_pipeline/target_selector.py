@@ -1,7 +1,7 @@
 # data_pipeline/target_selector.py
 from random import randint
 
-from config import AGENT_TYPES_WITHOUT_CIVILIAN, ACTION2ID
+from config import AGENT_TYPES_WITHOUT_CIVILIAN
 
 
 def is_action_move(agent_id, predict_time, locations):
@@ -20,17 +20,22 @@ def is_action_move(agent_id, predict_time, locations):
     return True
 
 
-def choose_target(vision, traffic, locations,  current_time):
+def choose_target(agent_id, vision, traffic, locations,  current_time):
     """
     Заглушка выбора "цели" – в будущем тут может быть логика
     выбора, допустим, самого важного агента/здания и т.д.
     """
+    if len(vision) <= 1:
+        return None
     last_vision = vision[-1].get('vision', None)
     agents_in_vision = [item for item in last_vision if item["type"] in AGENT_TYPES_WITHOUT_CIVILIAN]
-    if len(agents_in_vision) == 0:
-        return 0
+    if len(agents_in_vision) <= 1:
+        return None
     target_index = randint(0, len(agents_in_vision) - 1)
     target_id = agents_in_vision[target_index].get('id', None)
+    while target_id == agent_id:
+        target_index = randint(0, len(agents_in_vision) - 1)
+        target_id = agents_in_vision[target_index].get('id', None)
     target_type = agents_in_vision[target_index].get('type', None)
     target_action = 'rest'
     for agent in traffic[current_time].get('agents', []):

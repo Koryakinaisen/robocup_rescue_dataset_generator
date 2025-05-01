@@ -1,7 +1,7 @@
 # data_pipeline/parse_static_objects.py
 import json
 import xml.etree.ElementTree as ET
-from config import MAP_GML_FILE, STATIC_OBJECTS_JSON
+from config import STATIC_OBJECTS_JSON
 
 
 def _strip_ns(tag):
@@ -62,5 +62,6 @@ def _parse_gml(gml_path, out_json):
     print(f"[static_objects] &rarr; {out_json}")
 
 
-def generate_static_objects_file():
-    _parse_gml(MAP_GML_FILE, STATIC_OBJECTS_JSON)
+
+def generate_static_objects_file(map_path):
+   _parse_gml(map_path, STATIC_OBJECTS_JSON)

@@ -1,7 +1,8 @@
 # data_pipeline/parse_locations.py
 import json
 import re
-from config import KERNEL_LOG, LOCATIONS_JSON
+from config import LOCATIONS_JSON, get_files_path
+
 
 def _parse_log_to_json(log_file_path, json_file_path):
     """
@@ -75,8 +76,9 @@ def _parse_log_to_json(log_file_path, json_file_path):
     print(f"[parse_locations] Данные сохранены в {json_file_path}")
 
 
-def generate_locations_file():
+def generate_locations_file(logs_dir):
     """
     Запускаем парсер для kernel.log -> locations.json
     """
-    _parse_log_to_json(KERNEL_LOG, LOCATIONS_JSON)
+    kernel_log = get_files_path(logs_dir).get('kernel_log', None)
+    _parse_log_to_json(kernel_log, LOCATIONS_JSON)

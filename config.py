@@ -9,10 +9,8 @@ def get_files_path(logs_dir):
     return {
         "kernel_log"  : os.path.join(logs_dir, "SIMULATION/kernel.log"),
         "traffic_log" : os.path.join(logs_dir, "SIMULATION/traffic.log"),
-        "GIS_LOG"     : os.path.join(logs_dir, "SIMULATION/gis.log"),
+        "gis_log"     : os.path.join(logs_dir, "SIMULATION/gis.log"),
     }
-
-MAP_GML_FILE = os.path.join("", "map.gml")
 
 JSON_DIR = "json_files"
 LOCATIONS_JSON = os.path.join(JSON_DIR, "locations.json")

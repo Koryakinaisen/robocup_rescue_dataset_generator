@@ -2,7 +2,8 @@
 import re
 import json
 
-from config import GIS_LOG, ID_TO_TYPE_JSON
+from config import ID_TO_TYPE_JSON, get_files_path, AGENT_TYPES
+
 
 def _parse_gis_log(log_file_path):
     """
@@ -37,11 +38,25 @@ def _parse_gis_log(log_file_path):
     return id_to_type
 
 
-def generate_id_to_type():
+def delete_unused_agents(id_to_type, locations):
+    used_ids = set()
+    for agent in locations[0]["data"]:
+        used_ids.add(agent["id"])
+
+    # 2. Фильтруем словарь по двум условиям
+    return {
+        agent_id: agent_type
+        for agent_id, agent_type in id_to_type.items()
+        if agent_id in used_ids and agent_type in AGENT_TYPES
+    }
+
+
+def generate_id_to_type(logs_dir):
+    gis_log = get_files_path(logs_dir).get('gis_log')
     """
     Парсим gis.log и записываем соответствие id->type в JSON.
     """
-    id_to_type = _parse_gis_log(GIS_LOG)
+    id_to_type = _parse_gis_log(gis_log)
     with open(ID_TO_TYPE_JSON, 'w') as json_file:
         json.dump(id_to_type, json_file, indent=4)
 

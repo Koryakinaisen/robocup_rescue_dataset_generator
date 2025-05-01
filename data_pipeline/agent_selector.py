@@ -1,7 +1,7 @@
 # data_pipeline/agent_selector.py
 import random
 
-from config import WINDOW_SIZE, AGENT_TYPES
+from config import WINDOW_SIZE
 
 
 def choose_agent(id_to_type, locations):

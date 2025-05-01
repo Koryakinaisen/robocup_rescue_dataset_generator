@@ -1,7 +1,8 @@
 # data_pipeline/parse_traffic.py
 import json
 import re
-from config import TRAFFIC_LOG, TRAFFIC_JSON
+from config import TRAFFIC_JSON, get_files_path
+
 
 def _parse_traffic_log(log_file_path, json_file_path):
     """
@@ -74,8 +75,9 @@ def _parse_traffic_log(log_file_path, json_file_path):
 
     print(f"[parse_traffic] Файл {json_file_path} успешно создан.")
 
-def generate_traffic_file():
+def generate_traffic_file(logs_dir):
     """
     Запуск парсера traffic.log -> traffic.json
     """
-    _parse_traffic_log(TRAFFIC_LOG, TRAFFIC_JSON)
+    traffic_log = get_files_path(logs_dir).get('traffic_log', None)
+    _parse_traffic_log(traffic_log, TRAFFIC_JSON)
