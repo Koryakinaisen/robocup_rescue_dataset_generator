@@ -70,14 +70,16 @@ def _parse_traffic_log(log_file_path, json_file_path):
         })
 
     # Сохраняем результат в JSON-файл
-    with open(json_file_path, 'w', encoding='utf-8') as out:
-        json.dump(timesteps, out, indent=2, ensure_ascii=False)
-
-    print(f"[parse_traffic] Файл {json_file_path} успешно создан.")
+    # with open(json_file_path, 'w', encoding='utf-8') as out:
+    #     json.dump(timesteps, out, indent=2, ensure_ascii=False)
+    #
+    # print(f"[parse_traffic] Файл {json_file_path} успешно создан.")
+    return timesteps
 
 def generate_traffic_file(logs_dir):
     """
     Запуск парсера traffic.log -> traffic.json
     """
     traffic_log = get_files_path(logs_dir).get('traffic_log', None)
-    _parse_traffic_log(traffic_log, TRAFFIC_JSON)
+    traffic = _parse_traffic_log(traffic_log, TRAFFIC_JSON)
+    return traffic

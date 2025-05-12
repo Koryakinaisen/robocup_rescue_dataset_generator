@@ -33,7 +33,7 @@ def _get_coordinates(roads_locations, buildings_locations, locations_data, targe
 
 
 
-def merge_vision_data(target_id, current_time, locations_data, static_objects):
+def merge_vision_data(filtered_kernel, target_id, current_time, locations_data, static_objects):
     """
     Пример чтения отфильтрованного лога (filtered_kernel.log),
     вычленения записей, где Ambulance/Police/Fire brigade что-то видят,
@@ -55,53 +55,52 @@ def merge_vision_data(target_id, current_time, locations_data, static_objects):
     needed_timestep = current_time - 9
     timestep = 0
     # Открываем лог-файл
-    with open(FILTERED_KERNEL_LOG, "r", encoding="utf-8") as file:
-        for line in file:
-            line = line.strip()
-            time_match = timestep_pattern.match(line)
-            if time_match:
-                timestep = int(time_match.group(1))
+    for line in filtered_kernel:
+        line = line.strip()
+        time_match = timestep_pattern.match(line)
+        if time_match:
+            timestep = int(time_match.group(1))
+            continue
+        if timestep < needed_timestep:
+            continue
+        if timestep > current_time:
+            break
+        match = pattern.match(line)
+        if match:
+            team, team_id, vision_data = match.groups()
+            # Проверяем, что id совпадает с заранее известным
+            if team_id != target_id:
                 continue
-            if timestep < needed_timestep:
-                continue
-            if timestep > current_time:
-                break
-            match = pattern.match(line)
-            if match:
-                team, team_id, vision_data = match.groups()
-                # Проверяем, что id совпадает с заранее известным
-                if team_id != target_id:
-                    continue
 
-                # vision_data содержит строку типа:
-                # "Building (18208), Ambulance team (1839229664), Road (8610), ..."
-                # Разбиваем строку по запятой
-                items = [item.strip() for item in vision_data.split(",")]
-                vision = []
-                # Регулярное выражение для каждого элемента
-                item_pattern = re.compile(r'([\w\s]+)\s+\((\d+)\)')
-                for item in items:
-                    item_match = item_pattern.search(item)
-                    if item_match:
-                        obj_type, obj_id = item_match.groups()
-                        obj_coordinates = _get_coordinates(
-                            roads_locations,
-                            buildings_locations,
-                            locations_data,
-                            obj_type,
-                            obj_id,
-                            timestep)
-                        if obj_coordinates is not None:
-                            vision.append({
-                                "type": obj_type.strip(),
-                                "id": obj_id.strip(),
-                                "coordinates": obj_coordinates
-                            })
+            # vision_data содержит строку типа:
+            # "Building (18208), Ambulance team (1839229664), Road (8610), ..."
+            # Разбиваем строку по запятой
+            items = [item.strip() for item in vision_data.split(",")]
+            vision = []
+            # Регулярное выражение для каждого элемента
+            item_pattern = re.compile(r'([\w\s]+)\s+\((\d+)\)')
+            for item in items:
+                item_match = item_pattern.search(item)
+                if item_match:
+                    obj_type, obj_id = item_match.groups()
+                    obj_coordinates = _get_coordinates(
+                        roads_locations,
+                        buildings_locations,
+                        locations_data,
+                        obj_type,
+                        obj_id,
+                        timestep)
+                    if obj_coordinates is not None:
+                        vision.append({
+                            "type": obj_type.strip(),
+                            "id": obj_id.strip(),
+                            "coordinates": obj_coordinates
+                        })
 
-                results.append({
-                    "timestep": timestep,
-                    "vision": vision
-                })
+            results.append({
+                "timestep": timestep,
+                "vision": vision
+            })
 
 
     # with open(VISION_JSON, "w", encoding="utf-8") as outfile:

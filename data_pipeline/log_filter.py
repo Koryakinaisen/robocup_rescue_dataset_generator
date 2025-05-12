@@ -1,6 +1,6 @@
 # data_pipeline/log_filter.py
 import re
-from config import get_files_path, FILTERED_KERNEL_LOG
+from config import get_files_path
 
 
 def filter_kernel_log(logs_dir):
@@ -10,13 +10,12 @@ def filter_kernel_log(logs_dir):
         re.IGNORECASE
     )
     timestep_pattern = re.compile(r"INFO kernel : Timestep (\d+)\s*$")
-    """Удаляем шумные строки из kernel.log &rarr; filtered_kernel.log"""
-    with open(kernel_log, 'r', encoding='utf-8') as inp, \
-            open(FILTERED_KERNEL_LOG, 'w', encoding='utf-8') as out:
+
+    filtered_lines = []
+
+    with open(kernel_log, 'r', encoding='utf-8') as inp:
         for line in inp:
-            # if ("Adding message 4876" in line or
-            #         "Output noise result: 4876" in line):
-            #     continue
             if timestep_pattern.match(line) or pattern.match(line):
-                out.write(line)
-    print(f"[log_filter] {FILTERED_KERNEL_LOG} готов.")
+                filtered_lines.append(line)
+
+    return filtered_lines

@@ -99,32 +99,25 @@ def main():
     if not os.path.exists(map_path):
         raise FileNotFoundError(f"Map file not found: {map_path}")
 
-    # 1. фильтруем kernel.log
-    filter_kernel_log(logs_dir)
+    # фильтруем kernel.log
+    filtered_kernel = filter_kernel_log(logs_dir)
 
-    # 2. создаём вспомогательные JSON-ы
-    generate_static_objects_file(map_path)
-    generate_locations_file(logs_dir)
-    generate_traffic_file(logs_dir)
-    generate_id_to_type(logs_dir)
+    # создаём вспомогательные JSON-ы
+    static_objects = generate_static_objects_file(map_path)
+    locations = generate_locations_file(logs_dir)
+    traffic = generate_traffic_file(logs_dir)
+    id_to_type = generate_id_to_type(logs_dir, locations)
 
-    # 3. загружаем вспомогательные JSON-ы
-    id_to_type, traffic, locations, static_objects = _load_data()
-
-    # # Удаляем неиспользуемых агентов
-    id_to_type = delete_unused_agents(id_to_type, locations)
-
-    # 4. получаем список агентов наблюдателей
+    # получаем список агентов наблюдателей
     agent_id_s = choose_agent(id_to_type, locations)
 
-    # 5.
     for agent_observer in agent_id_s:
         current_time = int(agent_observer.get('time', 0))
 
         agent_id = agent_observer.get('id', None)
 
         # Получаем обзор агента наблюдателя
-        vision = merge_vision_data(agent_id, current_time, locations, static_objects)
+        vision = merge_vision_data(filtered_kernel, agent_id, current_time, locations, static_objects)
 
         # Выбираем агента, которого будем прогнозировать
         target_agent = choose_target(agent_id, vision, traffic, locations, current_time)

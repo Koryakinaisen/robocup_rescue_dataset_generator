@@ -17,51 +17,72 @@ def _parse_gml(gml_path, out_json):
     for node in root.iter():
         if _strip_ns(node.tag) == "Node":
             node_id = next((node.attrib[k] for k in node.attrib if k.endswith("id")), None)
-            if not node_id: continue
+            if not node_id:
+                continue
             coords_el = node.find(".//{*}coordinates")
-            if not (coords_el is not None and coords_el.text): continue
+            if not (coords_el is not None and coords_el.text):
+                continue
             try:
                 x, y = map(float, coords_el.text.strip().split(","))
                 nodes[node_id] = {"locationX": x, "locationY": y}
             except ValueError:
                 pass
 
+    # Масштабирование координат узлов
+    if nodes:
+        all_x = [node["locationX"] for node in nodes.values()]
+        all_y = [node["locationY"] for node in nodes.values()]
+        minX, minY = min(all_x), min(all_y)
+    else:
+        minX = minY = 0  # На случай, если узлов нет
+
+    for node in nodes.values():
+        node["locationX"] = (node["locationX"] - minX)
+        node["locationY"] = (node["locationY"] - minY)
+
     # --- Edges ---
     edges = {}
     for edge in root.iter():
-        if _strip_ns(edge.tag) != "Edge": continue
+        if _strip_ns(edge.tag) != "Edge":
+            continue
         edge_id = next((edge.attrib[k] for k in edge.attrib if k.endswith("id")), None)
-        if not edge_id: continue
+        if not edge_id:
+            continue
         coords = []
         for dnode in edge.findall(".//{*}directedNode"):
             href = next((dnode.attrib[k] for k in dnode.attrib if k.endswith("href")), "")
             ref = href.lstrip("#")
-            if ref in nodes: coords.append(nodes[ref])
+            if ref in nodes:
+                coords.append(nodes[ref])
         edges[edge_id] = coords
 
     # --- Roads & Buildings ---
     roads, buildings = [], []
     for elem in root.iter():
         tag = _strip_ns(elem.tag)
-        if tag not in ("road", "building"): continue
+        if tag not in ("road", "building"):
+            continue
         elem_id = next((elem.attrib[k] for k in elem.attrib if k.endswith("id")), None)
-        if not elem_id: continue
+        if not elem_id:
+            continue
         edge_coords = []
         face = elem.find(".//{*}Face")
         if face:
             for dedge in face.findall(".//{*}directedEdge"):
                 href = next((dedge.attrib[k] for k in dedge.attrib if k.endswith("href")), "")
                 ref = href.lstrip("#")
-                if ref in edges: edge_coords.append(edges[ref])
+                if ref in edges:
+                    edge_coords.append(edges[ref])
         (roads if tag == "road" else buildings).append(
             {"id": elem_id, "coordinates": edge_coords}
         )
 
-    with open(out_json, "w", encoding="utf-8") as f:
-        json.dump({"roads": roads, "buildings": buildings}, f, indent=2, ensure_ascii=False)
-    print(f"[static_objects] &rarr; {out_json}")
-
+    # with open(out_json, "w", encoding="utf-8") as f:
+    #     json.dump({"roads": roads, "buildings": buildings}, f, indent=2, ensure_ascii=False)
+    # print(f"[static_objects] &rarr; {out_json}")
+    return {"roads": roads, "buildings": buildings}
 
 
 def generate_static_objects_file(map_path):
-   _parse_gml(map_path, STATIC_OBJECTS_JSON)
+    static_objects = _parse_gml(map_path, STATIC_OBJECTS_JSON)
+    return static_objects

@@ -70,10 +70,11 @@ def _parse_log_to_json(log_file_path, json_file_path):
         result.append(current_time_dict)
 
     # Сохраняем результат в JSON файл с форматированием
-    with open(json_file_path, 'w', encoding='utf-8') as out_file:
-        json.dump(result, out_file, indent=2, ensure_ascii=False)
+    # with open(json_file_path, 'w', encoding='utf-8') as out_file:
+    #     json.dump(result, out_file, indent=2, ensure_ascii=False)
 
-    print(f"[parse_locations] Данные сохранены в {json_file_path}")
+    # print(f"[parse_locations] Данные сохранены в {json_file_path}")
+    return result
 
 
 def generate_locations_file(logs_dir):
@@ -81,4 +82,5 @@ def generate_locations_file(logs_dir):
     Запускаем парсер для kernel.log -> locations.json
     """
     kernel_log = get_files_path(logs_dir).get('kernel_log', None)
-    _parse_log_to_json(kernel_log, LOCATIONS_JSON)
+    locations = _parse_log_to_json(kernel_log, LOCATIONS_JSON)
+    return locations

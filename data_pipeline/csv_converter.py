@@ -37,10 +37,10 @@ def list_to_csv( numbers, target_action, path):
     exists = p.exists() and os.path.getsize(p)>0
     with p.open('a' if exists else 'w', newline='', encoding='utf-8') as f:
         w=csv.writer(f)
-        if not exists:
-            header=[]
-            for _ in range(WINDOW_SIZE*MAX_OBJECTS): header.extend(FEATURES)
-            w.writerow(header)
+        # if not exists:
+        #     header=[]
+        #     for _ in range(WINDOW_SIZE*MAX_OBJECTS): header.extend(FEATURES)
+        #     w.writerow(header)
         w.writerow(numbers)
 
 

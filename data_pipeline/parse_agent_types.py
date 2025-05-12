@@ -5,7 +5,7 @@ import json
 from config import ID_TO_TYPE_JSON, get_files_path, AGENT_TYPES
 
 
-def _parse_gis_log(log_file_path):
+def _parse_gis_log(log_file_path, locations):
     """
     Сканируем gis.log, чтобы собрать соответствие id -> тип (Fire brigade, Police force и т.д.).
     Также ищем Refuge (преобразованные Building -> Refuge).
@@ -35,7 +35,7 @@ def _parse_gis_log(log_file_path):
                 obj_id = int(refuge_match.group(1))
                 id_to_type[obj_id] = 'Refuge'
 
-    return id_to_type
+    return delete_unused_agents(id_to_type, locations)
 
 
 def delete_unused_agents(id_to_type, locations):
@@ -45,19 +45,21 @@ def delete_unused_agents(id_to_type, locations):
 
     # 2. Фильтруем словарь по двум условиям
     return {
-        agent_id: agent_type
+        str(agent_id): agent_type
         for agent_id, agent_type in id_to_type.items()
-        if agent_id in used_ids and agent_type in AGENT_TYPES
+        if str(agent_id) in used_ids and agent_type in AGENT_TYPES
     }
 
 
-def generate_id_to_type(logs_dir):
+def generate_id_to_type(logs_dir, locations):
     gis_log = get_files_path(logs_dir).get('gis_log')
     """
     Парсим gis.log и записываем соответствие id->type в JSON.
     """
-    id_to_type = _parse_gis_log(gis_log)
-    with open(ID_TO_TYPE_JSON, 'w') as json_file:
-        json.dump(id_to_type, json_file, indent=4)
-
-    print(f"[parse_agent_types] Словарь id -> type сохранен в {ID_TO_TYPE_JSON}")
+    id_to_type = _parse_gis_log(gis_log, locations)
+    #id_to_type = delete_unused_agents(id_to_type, locations)
+    # with open(ID_TO_TYPE_JSON, 'w') as json_file:
+    #     json.dump(id_to_type, json_file, indent=4)
+    #
+    # print(f"[parse_agent_types] Словарь id -> type сохранен в {ID_TO_TYPE_JSON}")
+    return id_to_type

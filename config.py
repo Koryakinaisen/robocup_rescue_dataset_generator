@@ -45,7 +45,7 @@ AGENT_TYPES_WITHOUT_CIVILIAN = ["Police force", "Ambulance team", "Fire brigade"
 
 PRIORITIES = {
     "Fire brigade": ["Hydrant", "Fire station", "Building", "Agent", "Road"],
-    "Police force": ["Road", "Police office", "Agent"],
+    "Police force": ["Road", "Building", "Police office", "Agent"],
     "Ambulance team": ["Agent", "Refuge", "Ambulance center", "Building", "Road"],
 }
 

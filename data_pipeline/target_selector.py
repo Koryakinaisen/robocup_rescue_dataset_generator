@@ -33,10 +33,15 @@ def choose_target(agent_id, vision, traffic, locations,  current_time):
         return None
     target_index = randint(0, len(agents_in_vision) - 1)
     target_id = agents_in_vision[target_index].get('id', None)
-    while target_id == agent_id:
+    target_type = agents_in_vision[target_index].get('type', '')
+    counter = 0
+    while target_id == agent_id or target_type == '':
         target_index = randint(0, len(agents_in_vision) - 1)
         target_id = agents_in_vision[target_index].get('id', None)
-    target_type = agents_in_vision[target_index].get('type', None)
+        target_type = agents_in_vision[target_index].get('type', '')
+        counter += 1
+        if counter >= len(agents_in_vision):
+            return None
     target_action = 'rest'
     for agent in traffic[current_time].get('agents', []):
         if agent['id'] == target_id:
